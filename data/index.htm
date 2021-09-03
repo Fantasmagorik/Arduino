@@ -1,0 +1,492 @@
+ <!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<style type="text/css">
+			
+			.col-sm-offset-2 {
+			 background-color:#fff;
+			 box-shadow:0 12px 15px rgba(0, 0, 0, 0.4);
+			 padding:20px;
+			}
+			.alert-time {
+				background-color: #7badc5;
+				border-color: #BCE8F1;
+			}
+			.alert-custom {
+				  background-color: #eeeeee;
+				  border-color: #BCE8F1;
+			  }
+			/* loader */
+			.loader {
+				 border:15px solid #fff;
+				 border-top:15px solid #FF851B;
+				 border-radius:50%;
+				 width:70px;
+				 height:70px;
+				 animation:spin 1s linear infinite;
+				 margin-left:45%;
+			}
+			@keyframes spin {
+				 0% { transform:rotate(0deg); }
+				 100% { transform:rotate(360deg); }
+			}
+			ul#history {
+				 text-indent: .5em;
+				 border-left: .25em solid #c0c7ca;
+				 margin-left: 5px;
+			}
+			#history li {
+				margin-left: -31px;
+			}
+		</style>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<link rel="stylesheet" href="/bootstrap.min.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title></title>
+		<script type="text/javascript">
+			var xmlHttp=createXmlHttpObject();
+			function createXmlHttpObject(){
+				if(window.XMLHttpRequest){
+					xmlHttp=new XMLHttpRequest();
+				}else{
+					xmlHttp=new ActiveXObject('Microsoft.XMLHTTP');
+				}
+				return xmlHttp;
+			}
+			
+			function send_request(submit,server){
+				request = new XMLHttpRequest();
+				request.open("GET", server, true);
+				request.send();
+				save_status(submit,request);
+			}
+			function submit_disabled(request){
+				var inputs = document.getElementsByTagName("input");
+				for (var i = 0; i < inputs.length; i++) {
+					if (inputs[i].type === 'submit') {inputs[i].disabled = request;}
+				}
+			}
+			function save_status(submit,request){
+				old_submit = submit.value;
+				request.onreadystatechange = function() {
+					if (request.readyState != 4) 
+						return;
+					submit.value = request.responseText;
+					setTimeout(function(){
+						submit.value=old_submit;
+						submit_disabled(false);
+					}, 200);
+				}
+				submit.value = 'Подождите...';
+				submit_disabled(true);
+			}
+			function val(id){
+				var v = document.getElementById(id).value;
+				return v;
+			}
+			
+			function win(submit,texts){
+				if (confirm(texts)) {
+					server = "/win";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function restart(submit,texts){
+				if (confirm(texts)) {
+					server = "/restart";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function toHex(str) {
+        var result = '';
+        for (var i=0; i<str.length; i++) {
+          result += str.charCodeAt(i).toString(16);
+      }
+      return result;
+  }
+			
+			function unlock_door(submit,texts){
+				if (confirm(texts)) {
+					server = "/unlock";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function lock_door(submit,texts){
+				if (confirm(texts)) {
+					server = "/lock";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			function light_on(submit,texts){
+				if (confirm(texts)) {
+					server = "/light_on";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function light_off(submit,texts){
+				if (confirm(texts)) {
+					server = "/light_off";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function write(submit,texts){
+				if (confirm(texts)) {
+					server = "/write";
+					send_request(submit,server);
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+				function emulOneRFID(submit){
+					server = "/emulOneRFID";
+					send_request(submit,server);
+					return true;
+			}
+			
+			function showVal(value)	{
+				var xhttp = new XMLHttpRequest();
+				xhttp.overrideMimeType('text/xml');
+				xhttp.onreadystatechange = function() {
+				  if(xhttp.readyState == 4 && xhttp.status == 200)  {
+				    //alert("ok");
+				  }
+				}
+				xhttp.open("GET", "/setBrightRing?ringBright=" + value, true);
+				xhttp.send();
+					return true;
+			}
+			
+			function emulFourRFID(submit){
+					server = "/emulFourRFID";
+					send_request(submit,server);
+					return true;
+			}
+			
+			function set(submit,texts){
+				if (confirm(texts)) {
+				  if(cardVisible != 4)  {
+				    alert("set all beacons to their place and try again!");
+				    return;
+				  }
+					server = "/set";
+					send_request(submit,server);
+					document.getElementById('game_state').innerHTML ="save";
+					return true;
+				} 
+				else {
+					return false;
+				}
+			}
+			
+			function chColor(submit){
+			    alert("change color");
+			    alert(submit.value);
+					server = "/chColor";
+					send_request(submit,server);
+					return true;
+			}
+			
+			function process(){
+				if(xmlHttp.readyState==0 || xmlHttp.readyState==4){
+					xmlHttp.open('PUT','xml',true);
+					xmlHttp.onreadystatechange=handleServerResponse;
+					xmlHttp.send(null);
+				}
+				setTimeout('process()',1000);
+			}
+			
+			function handleServerResponse(){
+				if(xmlHttp.readyState==4 && xmlHttp.status==200){
+					xmlResponse=xmlHttp.responseXML;
+					xmldoc = xmlResponse.getElementsByTagName('wT');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('wT').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('pjN');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('pjN').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('prN');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('prN').innerHTML=message;
+					document.title=message;
+				
+					xmldoc = xmlResponse.getElementsByTagName('date');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('date').innerHTML=message;
+					xmldoc = xmlResponse.getElementsByTagName('time');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('time').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('cntWiFiErr');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cntWiFiErr').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('cntMQTTErr');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('cntMQTTErr').innerHTML=message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch0');
+					message = xmldoc[0].firstChild.nodeValue;
+					//static cardIDHEX = new Buffer(message);
+					document.getElementById('sens_1').innerHTML= "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch1');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_2').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch2');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_3').innerHTML=  "<br>" + message;;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch3');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_4').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch4');
+					message = xmldoc[0].firstChild.nodeValue;
+					//static cardIDHEX = new Buffer(message);
+					document.getElementById('sens_5').innerHTML= "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch5');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_6').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch6');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_7').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch7');
+					message = xmldoc[0].firstChild.nodeValue;
+					//static cardIDHEX = new Buffer(message);
+					document.getElementById('sens_8').innerHTML= "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch8');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_9').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch9');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_10').innerHTML=  "<br>" + message;;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch10');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_11').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch11');
+					message = xmldoc[0].firstChild.nodeValue;
+					//static cardIDHEX = new Buffer(message);
+					document.getElementById('sens_12').innerHTML= "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch12');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_13').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch13');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_14').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch14');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_15').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('switch15');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('sens_16').innerHTML=  "<br>" + message;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV1');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo1');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo1').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV2');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo2');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo2').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV3');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo3');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo3').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV4');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo4');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo4').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV5');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo5');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo5').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV6');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo6');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo6').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					xmldoc = xmlResponse.getElementsByTagName('comboV7');
+					message = xmldoc[0].firstChild.nodeValue;
+					xmldoc = xmlResponse.getElementsByTagName('combo7');
+					message1 = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('combo7').innerHTML=  "<br>" + message + "<br>" + "State:" + "<br>" + message1;
+					
+					
+					xmldoc = xmlResponse.getElementsByTagName('game_state');
+					message = xmldoc[0].firstChild.nodeValue;
+					document.getElementById('game_state').innerHTML=message;
+					
+				}
+			}
+			
+			
+			
+		</script>
+	<link rel="icon" href="/home1.png" />
+	</head>
+	<body onload="process();" style='background-color:#E9F0F0;'>
+		<div class="container">
+			<div class="row" style="text-align:center;">
+				<h2 style="margin:30px;" ><span id='prN'></h2>
+				<div class="col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
+					<div class="col-sm-12">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'> <strong><span id='pjN'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-12" >
+						  <div class="alert alert-info" style="margin:15px;"><font size='4' color='black'>UpTime: <strong><span id='wT'></span></strong></font></div>
+					</div>
+				  <div class="col-sm-12">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Build: <strong><span id='date'></span>  <span id='time'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>cntWiFiErr: <strong><span id='cntWiFiErr'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-6">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>cntMQTTErr: <strong><span id='cntMQTTErr'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens1: <strong><span id='sens_1'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens2: <strong><span id='sens_2'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens3: <strong><span id='sens_3'></span> </strong></font></div>
+				  </div>
+
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens4: <strong><span id='sens_4'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens5: <strong><span id='sens_5'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens6: <strong><span id='sens_6'></span> </strong></font></div>
+				  </div>
+				  
+				   <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens7: <strong><span id='sens_7'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens8: <strong><span id='sens_8'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens9: <strong><span id='sens_9'></span> </strong></font></div>
+				  </div>
+				  
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens10: <strong><span id='sens_10'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens11: <strong><span id='sens_11'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens12: <strong><span id='sens_12'></span> </strong></font></div>
+				  </div>
+				  
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens13: <strong><span id='sens_13'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens14: <strong><span id='sens_14'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens15: <strong><span id='sens_15'></span> </strong></font></div>
+				  </div>
+				  <div class="col-sm-3">
+							<div class="alert  alert-info" style="margin:15px;"><font size='3' color='black'>Sens16: <strong><span id='sens_16'></span> </strong></font></div>
+				  </div>
+          
+          <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 1: <strong><span id='combo1'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 2: <strong><span id='combo2'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 3: <strong><span id='combo3'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 4: <strong><span id='combo4'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 5: <strong><span id='combo5'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 6: <strong><span id='combo6'></span></strong></font></div>
+				  </div>
+				  <div class="col-sm-4">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>combo 7: <strong><span id='combo7'></span></strong></font></div>
+				  </div>
+				  
+				  <div class="col-sm-12">
+							<div class="alert  alert-info" style="margin:15px;"><font size='4' color='black'>Game state: <strong><span id='game_state'></span></strong></font></div>
+				  </div>
+          
+            
+					<div class="col-sm-12">
+
+					  <input class="btn btn-block btn-danger" value="WIN" style="margin-top:15px;" onclick="win(this,'ARE YOU SURE?');" type="submit">
+					  <input class="btn btn-block btn-danger" value="RESTART" onclick="restart(this,'ARE YOU SURE?');" type="submit">
+					  <a class="btn btn-block btn-primary" href="/device.htm">Settings page</a>
+			    </div>
+			    
+				</div>
+			</div>
+		</div>
+	</body>
